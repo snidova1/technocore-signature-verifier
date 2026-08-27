@@ -1,6 +1,6 @@
 # Technocore Signature Verifier
 
-Standalone public verifier for Technocore v0.7 Ed25519 envelopes. It decodes `did:key` material, checks the Ed25519 multicodec prefix, applies the protocol sweep, and verifies the canonical signature without a private seed.
+Standalone public verifier for Technocore v0.7 Ed25519 envelopes. It decodes `did:key` material, checks the Ed25519 multicodec prefix, applies the protocol sweep, and verifies the canonical signature without a private seed. Signature input is intentionally strict: exactly 86 unpadded base64url characters (`A-Z`, `a-z`, `0-9`, `-`, `_`). Standard Base64 aliases using `+` or `/` are rejected so one signature has one textual representation.
 
 ```bash
 pip install -r requirements.txt

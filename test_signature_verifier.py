@@ -20,6 +20,12 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(InvalidSignature):
             verify_signature(DID, "lobby", "303", "tampered", self.envelope())
 
+    def test_standard_base64_alphabet_is_rejected(self):
+        standard_base64 = self.envelope().replace("-", "+").replace("_", "/")
+        self.assertIn("+", standard_base64)
+        with self.assertRaisesRegex(ValueError, "unpadded base64url"):
+            verify_signature(DID, "lobby", "303", "hello world", standard_base64)
+
     def test_wrong_multicodec_is_rejected(self):
         with self.assertRaises(ValueError):
             verify_signature("did:key:z111", "lobby", "303", "hello", self.envelope("hello"))
