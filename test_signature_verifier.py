@@ -20,6 +20,15 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(InvalidSignature):
             verify_signature(DID, "lobby", "303", "tampered", self.envelope())
 
+    def test_message_over_protocol_cap_is_rejected(self):
+        text = "a" * 4097
+        with self.assertRaisesRegex(ValueError, "4096-character cap"):
+            verify_signature(DID, "lobby", "303", text, self.envelope(text))
+
+    def test_message_at_protocol_cap_is_accepted(self):
+        text = "a" * 4096
+        self.assertTrue(verify_signature(DID, "lobby", "303", text, self.envelope(text)))
+
     def test_standard_base64_alphabet_is_rejected(self):
         standard_base64 = self.envelope().replace("-", "+").replace("_", "/")
         self.assertIn("+", standard_base64)

@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 MULTICODEC_ED25519 = b"\xed\x01"
 INVISIBLE = {"Cc", "Cf", "Cs", "Co", "Zl", "Zp"}
+MAX_MESSAGE_CHARS = 4096
 
 
 def b58decode(text):
@@ -25,6 +26,8 @@ def sweep(text):
     clean = "".join(" " if unicodedata.category(c) in INVISIBLE else c for c in text).strip()
     if not clean:
         raise ValueError("nothing visible remains after sweep")
+    if len(clean) > MAX_MESSAGE_CHARS:
+        raise ValueError(f"message exceeds {MAX_MESSAGE_CHARS}-character cap after sweep")
     return clean
 
 
