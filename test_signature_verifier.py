@@ -39,6 +39,16 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             verify_signature("did:key:z111", "lobby", "303", "hello", self.envelope("hello"))
 
+    def test_non_string_semantic_fields_name_the_refused_field(self):
+        valid: list[object] = [DID, "lobby", "303", "hello world", self.envelope()]
+        for index, field in enumerate(("did", "room", "nonce", "text", "signature")):
+            values = valid.copy()
+            values[index] = 0
+            with self.subTest(field=field), self.assertRaisesRegex(
+                ValueError, rf"^{field} must be a string$"
+            ):
+                verify_signature(*values)
+
 
 if __name__ == "__main__":
     unittest.main()
