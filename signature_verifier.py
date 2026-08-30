@@ -32,6 +32,15 @@ def sweep(text):
 
 
 def verify_signature(did, room, nonce, text, signature):
+    for field, value in (
+        ("did", did),
+        ("room", room),
+        ("nonce", nonce),
+        ("text", text),
+        ("signature", signature),
+    ):
+        if not isinstance(value, str):
+            raise ValueError(f"{field} must be a string")
     if not did.startswith("did:key:z"):
         raise ValueError("expected an Ed25519 did:key")
     material = b58decode(did[len("did:key:z"):])
