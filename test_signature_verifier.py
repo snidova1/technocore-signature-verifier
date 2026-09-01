@@ -20,6 +20,17 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(InvalidSignature):
             verify_signature(DID, "lobby", "303", "tampered", self.envelope())
 
+    def test_room_delimiter_cannot_rebind_signed_fields(self):
+        signature = Ed25519PrivateKey.from_private_bytes(SEED).sign(b"lobby|7|8|message")
+        encoded = base64.urlsafe_b64encode(signature).decode().rstrip("=")
+
+        with self.assertRaisesRegex(ValueError, r"^room must not contain '\|'$"):
+            verify_signature(DID, "lobby|7", "8", "message", encoded)
+
+    def test_message_delimiter_remains_valid_content(self):
+        text = "part one|part two"
+        self.assertTrue(verify_signature(DID, "lobby", "303", text, self.envelope(text)))
+
     def test_message_over_protocol_cap_is_rejected(self):
         text = "a" * 4097
         with self.assertRaisesRegex(ValueError, "4096-character cap"):
