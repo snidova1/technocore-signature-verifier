@@ -9,8 +9,8 @@ SEED = bytes.fromhex("00" * 31 + "01")
 
 
 class SignatureTests(unittest.TestCase):
-    def envelope(self, text="hello world"):
-        signature = Ed25519PrivateKey.from_private_bytes(SEED).sign(f"lobby|303|{text}".encode())
+    def envelope(self, text="hello world", room="lobby"):
+        signature = Ed25519PrivateKey.from_private_bytes(SEED).sign(f"{room}|303|{text}".encode())
         return base64.urlsafe_b64encode(signature).decode().rstrip("=")
 
     def test_valid_signature(self):
@@ -26,6 +26,13 @@ class SignatureTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, r"^room must not contain '\|'$"):
             verify_signature(DID, "lobby|7", "8", "message", encoded)
+
+    def test_protocol_invalid_room_names_are_rejected(self):
+        for room in ("", "Lobby", "-lobby", "lobby/side", "a" * 49):
+            with self.subTest(room=room), self.assertRaisesRegex(
+                ValueError, "invalid Technocore room name"
+            ):
+                verify_signature(DID, room, "303", "hello world", self.envelope(room=room))
 
     def test_message_delimiter_remains_valid_content(self):
         text = "part one|part two"

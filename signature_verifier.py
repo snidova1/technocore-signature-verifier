@@ -2,6 +2,7 @@
 import argparse
 import base64
 import binascii
+import re
 import unicodedata
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
@@ -43,6 +44,8 @@ def verify_signature(did, room, nonce, text, signature):
             raise ValueError(f"{field} must be a string")
     if "|" in room:
         raise ValueError("room must not contain '|'")
+    if re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,47}", room) is None:
+        raise ValueError("invalid Technocore room name")
     if not did.startswith("did:key:z"):
         raise ValueError("expected an Ed25519 did:key")
     material = b58decode(did[len("did:key:z"):])
