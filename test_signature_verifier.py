@@ -53,6 +53,24 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unpadded base64url"):
             verify_signature(DID, "lobby", "303", "hello world", standard_base64)
 
+    def test_signature_has_exactly_one_base64url_spelling(self):
+        canonical = self.envelope()
+        raw = base64.urlsafe_b64decode(canonical + "==")
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+        aliases = [
+            canonical[:-1] + char
+            for char in alphabet
+            if char != canonical[-1]
+            and base64.urlsafe_b64decode(canonical[:-1] + char + "==") == raw
+        ]
+        self.assertEqual(len(aliases), 15, "base64url's four slack bits create 15 aliases")
+
+        for alias in aliases:
+            with self.subTest(alias=alias), self.assertRaisesRegex(ValueError, "canonical"):
+                verify_signature(DID, "lobby", "303", "hello world", alias)
+
+        self.assertTrue(verify_signature(DID, "lobby", "303", "hello world", canonical))
+
     def test_wrong_multicodec_is_rejected(self):
         with self.assertRaises(ValueError):
             verify_signature("did:key:z111", "lobby", "303", "hello", self.envelope("hello"))
