@@ -48,7 +48,10 @@ def verify_signature(did, room, nonce, text, signature):
         raise ValueError("invalid Technocore room name")
     if not did.startswith("did:key:z"):
         raise ValueError("expected an Ed25519 did:key")
-    material = b58decode(did[len("did:key:z"):])
+    payload = did[len("did:key:z"):]
+    if len(payload) != 47 or any(char not in B58 for char in payload):
+        raise ValueError("invalid Ed25519 did:key encoding")
+    material = b58decode(payload)
     if len(material) != 34 or material[:2] != MULTICODEC_ED25519:
         raise ValueError("expected an Ed25519 did:key multicodec payload")
     if not nonce.isascii() or not nonce.isdigit() or not 1 <= len(nonce) <= 19:

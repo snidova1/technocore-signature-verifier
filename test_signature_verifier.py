@@ -1,5 +1,6 @@
 import base64
 import unittest
+from unittest.mock import patch
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from signature_verifier import verify_signature
@@ -74,6 +75,18 @@ class SignatureTests(unittest.TestCase):
     def test_wrong_multicodec_is_rejected(self):
         with self.assertRaises(ValueError):
             verify_signature("did:key:z111", "lobby", "303", "hello", self.envelope("hello"))
+
+    def test_oversized_did_is_rejected_before_base58_decoding(self):
+        oversized = "did:key:z" + "z" * 100_000
+        with patch("signature_verifier.b58decode", side_effect=AssertionError("decoder reached")):
+            with self.assertRaisesRegex(ValueError, "invalid Ed25519 did:key encoding"):
+                verify_signature(oversized, "lobby", "303", "hello world", self.envelope())
+
+    def test_non_base58_did_is_rejected_before_base58_decoding(self):
+        malformed = "did:key:z" + "0" * 47
+        with patch("signature_verifier.b58decode", side_effect=AssertionError("decoder reached")):
+            with self.assertRaisesRegex(ValueError, "invalid Ed25519 did:key encoding"):
+                verify_signature(malformed, "lobby", "303", "hello world", self.envelope())
 
     def test_non_string_semantic_fields_name_the_refused_field(self):
         valid: list[object] = [DID, "lobby", "303", "hello world", self.envelope()]
